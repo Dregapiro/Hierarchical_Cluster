@@ -1,108 +1,141 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import time
 
-X = np.array([[5,3],
-    [10,15],
-    [15,12],
-    [24,10],
-    [30,30],
-    [85,70],
-    [71,80],
-    [60,78],
-    [70,55],
-    [80,91],])
-
-# print("lala")
-# labels = range(1, 11)
-# plt.figure(figsize=(10, 7))
-# plt.subplots_adjust(bottom=0.1)
-# plt.scatter(X[:,0],X[:,1], label='True Position')
-#
-# # for label, x, y in zip(labels, X[:, 0], X[:, 1]):
-# #     plt.annotate(
-# #         label,
-# #         xy=(x, y), xytext=(-3, 3),
-# #         textcoords='offset points', ha='right', va='bottom')
-# # plt.show()
-#
-#
-# a = X.__len__()
-# Y = np.zeros((a,a));
-# #print(Y)
-#
-# for i in range(a) :
-#     #print(X[i,0],",", X[i,1])
-#     for j in range(a):
-#         print(((X[i,0]-X[j,0])**2+(X[i,1]-X[j,1])**2)**0.5)
-#         Y[i,j] = ((X[i,0]-X[j,0])**2+(X[i,1]-X[j,1])**2)**0.5
-#     #print(Y[i,j])
-# print(Y)
+np.set_printoptions(linewidth=400)  # display more columns of data in console
+# Matrix of random points coordinates (0-100)
+X = np.random.randint(300, size=(40, 2))
 
 from scipy.cluster.hierarchy import dendrogram, linkage
 from matplotlib import pyplot as plt
-
+start_time_scipy = time.time()
 linked = linkage(X, 'single')
+stop_time_scipy = time.time() - start_time_scipy
 print(linked)
 
-labelList = range(1, 11)
+"""	Class for implement of hierarchical clustering on data from X list
+	MARCYSIA PISZEMY KOMENTARZE !!! NAZWY IN INGLISZ !!! ;D
+"""
 
-plt.figure(figsize=(10, 7))
-dendrogram(linked,
-            orientation='top',
-            labels=labelList,
-            distance_sort='descending',
-            show_leaf_counts=True)
-plt.show()
-#cluster 1 cluster 2
 
-class Cluster:
+class HierarchicalClustering:
+    tablicabytu = []  # num for each element
+    tablenumnode = []  # num of nodes in one cluster
+    tablelinkage = np.empty((0,4), float)  # table to compare
+
+    a = X.__len__()  # Length of matrix with coordinates
+    Y = np.zeros((a, a))  # distance between each cluster from X array (after init)
 
     def __init__(self):
-        self.name = []
-        self.x_axis=[]
-        self.y_axis=[]
+        for i in range(self.a):  # create adequate count of num for analysing elements
+            self.tablicabytu.append(i)
+            self.tablenumnode.append(1)  # firstly every cluster has one node
+        print("Matrix of distances between elements:")
+        for i in range(self.a):
+            for j in self.tablicabytu:
+                self.Y[i, j] = ((X[i, 0] - X[j, 0]) ** 2 + (X[i, 1] - X[j, 1]) ** 2) ** 0.5
 
-    def giveAtributes(self, name, x_axis, y_axis):
-        self.name.append(name)
-        self.x_axis.append(x_axis)
-        self.y_axis.append(y_axis)
+    # print(self.Y)
 
-    def mergeClusters(self, newCluster):
-        self.giveName(newCluster.name)
-        self.giveXaxis(newCluster.x_axis)
-        self.giveYaxis(newCluster.y_axis)
+    def Findmindistance(self):
+        """	Find minimum distance between each pair of cluster
 
-    # Add name to list
-    def giveName(self, givenName):
-        for i in range(givenName.__len__()):
-            self.name.append(givenName[i])
+		:return: minimal distance?, row, column
+		"""
+        wiersz = 0
+        kolumna = 0
+        liczbamin = self.Y.max()
 
-    # Add distance to list
-    def giveXaxis(self, givenX):
-        for i in range(givenX.__len__()):
-            self.x_axis.append(givenX[i])
+        for i in self.tablicabytu:
+            for j in self.tablicabytu:
+                if self.Y[i, j] != 0:
+                    if liczbamin > self.Y[i, j]:
+                        # Change min distance
+                        liczbamin = self.Y[i, j]
+                        wiersz = i
+                        kolumna = j
+        nodes = self.tablenumnode[wiersz] + self.tablenumnode[kolumna]
+        self.tablenumnode.append(nodes)
+        # print("For now "+str(wiersz)+" to " + str(kolumna) + " have the shortest distance = " + str(liczbamin))
 
-    def giveYaxis(self, givenY):
-        for i in range(givenY.__len__()):
-            self.y_axis.append(givenY[i])
+        return liczbamin, wiersz, kolumna, nodes
 
-    # Find minimun distance
-    #def findMinDistance(self):
+    def Distance(self, point1, point2):
+        """	Calculate distance between two points
+			using their coordinates
+
+		:param point1: coordinates of first cluster
+		:param point2: coordinates of second cluster
+		:return: distance from point 1 to point 2
+		"""
+        distance = ((X[point1, 0] - X[point2, 0]) ** 2 + (X[point1, 1] - X[point2, 1]) ** 2) ** 0.5
+        return distance
+
+    def SmallestDistance(self, distance1, distance2):
+        """	Compare two distance and return shorter
+
+		:param distance1:
+		:param distance2:
+		:return: smaller from above
+		"""
+        if distance1 > distance2:
+            return distance2
+        else:
+            return distance1
+
+    def AddNewRow(self, element1, element2):
+        """	Remove merged elements and add new one
+			with smallest distances for each of clusters
+		:param element1:	num of first cluster
+		:param element2:	num of second cluster
+		:return:None
+		"""
+        # Subtract merged elements
+        self.tablicabytu.remove(element1)
+        self.tablicabytu.remove(element2)
+        self.tablicabytu.append(self.a)  # Add new num to 'tablicabytu'
+        # nodes = self.tablenumnode[element1] + self.tablenumnode[element2]
+        # self.tablenumnode.append(nodes)
+        self.Y = np.pad(self.Y, ((0, 1), (0, 1)), 'constant')  # Add new row and column of zeros to matrix of distances
+        # Add smallest distances of new element to matrix
+        for i in self.tablicabytu:
+            Distance1 = self.Y[i, element1]
+            Distance2 = self.Y[i, element2]
+            self.Y[self.a, i] = self.SmallestDistance(Distance1, Distance2)
+            self.Y[i, self.a] = self.SmallestDistance(Distance1, Distance2)
+
+    # print("New table of elements is:")
+    # print(self.tablicabytu)
+    # print("Nodes in tablenodes:")
+    # print(self.tablenumnode)
+
+    def Allfunc(self):
+        """	Start sequence of hierarchical clustering
+			until there is more than one cluster
+		:return: None
+		"""
+        while self.tablicabytu.__len__() != 1:
+            dane = self.Findmindistance()
+            # nodes =dane[3]
+            # self.tablelinkage.append([dane[1], dane[2], dane[0], dane[3]])
+            self.tablelinkage = np.append(self.tablelinkage, np.array([[dane[1], dane[2], dane[0], dane[3]]],),axis=0)
+            # print(self.tablelinkage)
+
+            self.AddNewRow(dane[1], dane[2])
+            self.a = self.a + 1  # Increment count of elements
 
 
+gloryOfRome = HierarchicalClustering()  # Make new class for hierarchical clustering
+# print("Table of indexes for elements in above matrix:")
+# print(gloryOfRome.tablicabytu)
+start_time_project = time.time()
+gloryOfRome.Allfunc()  # Start hierarchical clustering
+stop_time_project = time.time() - start_time_project
+# print(gloryOfRome.Y)	# Show final matrix of distances
+print(gloryOfRome.tablelinkage)  # Show final matrix to compare
+print(stop_time_scipy)
+print(stop_time_project)
 
-# punktA = Cluster()
-# punktC = Cluster()
-# punktA.giveAtributes("A", 0, 1)
-# print(str(punktA.name) + str(punktA.x_axis) + str(punktA.y_axis))
-# punktB = Cluster()
-# punktB.giveAtributes("B", 2, 3)
-#
-# print(str(punktA.name) + str(punktA.x_axis) + str(punktA.y_axis))
-# punktA.mergeClusters(punktB)
-# print(str(punktA.name) + str(punktA.x_axis) + str(punktA.y_axis))
-# punktC.giveAtributes("C", 1, 2)
-# print(str(punktC.name) + str(punktC.x_axis) + str(punktC.y_axis))
-
+print(gloryOfRome.tablelinkage-linked)
 
