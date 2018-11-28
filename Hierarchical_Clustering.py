@@ -2,33 +2,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import time
+from sklearn.cluster import AgglomerativeClustering
 
 np.set_printoptions(linewidth=400)  # display more columns of data in console
 # Matrix of random points coordinates (0-100)
 X = np.random.randint(300, size=(40, 2))
-
-from scipy.cluster.hierarchy import dendrogram, linkage
+################################################################
+############# Hierarchical clustering from SciPy ###############
+################################################################
+from scipy.cluster.hierarchy import dendrogram, linkage, cut_tree
 from matplotlib import pyplot as plt
-start_time_scipy = time.time()
-linked = linkage(X, 'single')
-stop_time_scipy = time.time() - start_time_scipy
-print(linked)
+
+# start_time_scipy = time.time()
+# linked = linkage(X, 'single')
+# cutTree = cut_tree(linked, 5)
+# stop_time_scipy = time.time() - start_time_scipy
+# print(linked)
+################################################################
 
 """	Class for implement of hierarchical clustering on data from X list
-	MARCYSIA PISZEMY KOMENTARZE !!! NAZWY IN INGLISZ !!! ;D
+
 """
 
 
 class HierarchicalClustering:
     tablicabytu = []  # num for each element
     tablenumnode = []  # num of nodes in one cluster
-    tablelinkage = np.empty((0,4), float)  # table to compare
+    tablelinkage = np.empty((0, 4), float)  # table to compare
+    clusterElements = []
 
     a = X.__len__()  # Length of matrix with coordinates
     Y = np.zeros((a, a))  # distance between each cluster from X array (after init)
 
     def __init__(self):
         for i in range(self.a):  # create adequate count of num for analysing elements
+            self.clusterElements.append(i)
             self.tablicabytu.append(i)
             self.tablenumnode.append(1)  # firstly every cluster has one node
         print("Matrix of distances between elements:")
@@ -95,6 +103,7 @@ class HierarchicalClustering:
         self.tablicabytu.remove(element1)
         self.tablicabytu.remove(element2)
         self.tablicabytu.append(self.a)  # Add new num to 'tablicabytu'
+        self.clusterElements.append([element1, element2])
         # nodes = self.tablenumnode[element1] + self.tablenumnode[element2]
         # self.tablenumnode.append(nodes)
         self.Y = np.pad(self.Y, ((0, 1), (0, 1)), 'constant')  # Add new row and column of zeros to matrix of distances
@@ -115,15 +124,18 @@ class HierarchicalClustering:
 			until there is more than one cluster
 		:return: None
 		"""
-        while self.tablicabytu.__len__() != 1:
+        # while self.tablenumnode.__len__()-40 < 3:
+        while self.tablicabytu.__len__() > 5:
             dane = self.Findmindistance()
             # nodes =dane[3]
             # self.tablelinkage.append([dane[1], dane[2], dane[0], dane[3]])
-            self.tablelinkage = np.append(self.tablelinkage, np.array([[dane[1], dane[2], dane[0], dane[3]]],),axis=0)
+            self.tablelinkage = np.append(self.tablelinkage, np.array([[dane[1], dane[2], dane[0], dane[3]]], ), axis=0)
             # print(self.tablelinkage)
 
             self.AddNewRow(dane[1], dane[2])
             self.a = self.a + 1  # Increment count of elements
+        for i in self.tablicabytu:
+            print(self.clusterElements[i])
 
 
 gloryOfRome = HierarchicalClustering()  # Make new class for hierarchical clustering
@@ -134,8 +146,10 @@ gloryOfRome.Allfunc()  # Start hierarchical clustering
 stop_time_project = time.time() - start_time_project
 # print(gloryOfRome.Y)	# Show final matrix of distances
 print(gloryOfRome.tablelinkage)  # Show final matrix to compare
-print(stop_time_scipy)
+print(gloryOfRome.tablicabytu)
+print(gloryOfRome.clusterElements)
+# print(stop_time_scipy)
 print(stop_time_project)
 
-print(gloryOfRome.tablelinkage-linked)
+# print(gloryOfRome.tablelinkage-linked)
 
