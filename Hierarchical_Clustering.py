@@ -23,7 +23,8 @@ from matplotlib import pyplot as plt
 """	Class for implement of hierarchical clustering on data from X list
 
 """
-
+#  number of clusters to be created
+NumberOfClusters = 5
 
 class HierarchicalClustering:
     tablicabytu = []  # num for each element
@@ -125,7 +126,7 @@ class HierarchicalClustering:
 		:return: None
 		"""
         # while self.tablenumnode.__len__()-40 < 3:
-        while self.tablicabytu.__len__() > 5:
+        while self.tablicabytu.__len__() > NumberOfClusters:
             dane = self.Findmindistance()
             # nodes =dane[3]
             # self.tablelinkage.append([dane[1], dane[2], dane[0], dane[3]])
